@@ -109,7 +109,14 @@ void writeData(Image *image)
 
 //Frees an image
 void freeImage(Image *image)
-{
+{	
+	if (image == NULL) {
+		return;
+	}
+	
+	for (int i = 0; i < image->rows; i++) {
+		free(image->image[i]);
+	}
 	free(image->image);
 	free(image);
 }
