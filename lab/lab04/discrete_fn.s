@@ -77,6 +77,17 @@ main:
 # Think: why might having a1 be useful?
 f:
     # YOUR CODE GOES HERE!
+    # Load params
+    addi t0, a0, 3
+    add t1, a1, x0
+    
+    # Calculate the offset
+    addi t2, x0, 4  # t2 is always 4
+    mul t3, t0, t2  # t3 = t0 * t2, which represets offest
+
+    add t4, t3, t1  # calculate the address of target value
+
+    lw a0, 0(t4)    # load the result
 
     jr ra               # Always remember to jr ra after your function!
 
