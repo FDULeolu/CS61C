@@ -14,15 +14,14 @@
 # ==============================================================================
 relu:
     # Prologue
-    addi sp, sp, -32
+    addi sp, sp, -28
     sw ra, 0(sp)
     sw t0, 4(sp)
     sw t1, 8(sp)
     sw t2, 12(sp)
     sw t3, 16(sp)
     sw t4, 20(sp)
-    sw t0, 24(sp)
-    sw s0, 28(sp)
+    sw s0, 24(sp)
 
 loop_start:
     beq a0, x0, Exceptions  # if pointer is null, raise error
@@ -61,9 +60,8 @@ loop_end:
     lw t2, 12(sp)
     lw t3, 16(sp)
     lw t4, 20(sp)
-    lw t0, 24(sp)
-    lw s0, 28(sp)
-    addi sp, sp, 32
+    lw s0, 24(sp)
+    addi sp, sp, 28
 
 	ret
 
