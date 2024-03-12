@@ -1,10 +1,5 @@
 .globl matmul
 
-# .data
-# array1: .word 1, 2, 3, 4, 5, 6, 7, 8, 9
-# array2: .word 1, 2, 3, 4, 5, 6, 7, 8, 9
-# array3: .word 0, 0, 0, 0, 0, 0, 0, 0, 0
-
 .text
 # =======================================================
 # FUNCTION: Matrix Multiplication of 2 integer matrices
@@ -29,13 +24,6 @@
 #     this function terminates the program with exit code 74.
 # =======================================================
 matmul:
-    # la a0, array1
-    # li a1, 3
-    # li a2, 3
-    # la a3, array2
-    # li a4, 3
-    # li a5, 3
-    # la a6, array3
 
     # Error checks
     ble a1, x0, exception_72
