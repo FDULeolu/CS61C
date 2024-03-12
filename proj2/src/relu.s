@@ -66,6 +66,5 @@ loop_end:
 	ret
 
 Exceptions:
-    li a0, 78   # save error code in a0
-    li a7, 93   # 93 means exit
-    ecall
+    li a1, 78   # save error code in a1
+    exit2
