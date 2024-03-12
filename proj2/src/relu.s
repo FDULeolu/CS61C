@@ -67,4 +67,4 @@ loop_end:
 
 Exceptions:
     li a1, 78   # save error code in a1
-    exit2
+    j exit2
