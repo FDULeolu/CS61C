@@ -1,19 +1,19 @@
 Scenario 1
-    1.
-    2.
-    3.
+    1.Step Size, Cache Size
+    2.0.0
+    3.Step Size, 1
 
 Scenario 2
-    1.
-    2.
-    3.
+    1.16
+    2.MHHH
+    3.1.0
 
 Scenario 3
-    1.
-    2.
-    3.
-    4.
-    5.
+    1.0.50, 0.00, 0.33
+    2.32, 16
+    3.16
+    4.Rep Count
+    5.=, =, +, =
 
 --- lines below are ignored by the AG ---
 
