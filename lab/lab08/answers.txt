@@ -1,13 +1,13 @@
 Exercise 1:
-    1.
-    2.
-    3.
+    1.32
+    2.4, 6, 0, 6
+    3.no, yes
 
 Exercise 2:
-    1.
+    1.00, 20, 40, 60, 80, A0, C0, E0, 00, 20
 
 Exercise 3:
-    1.
+    1.Physical Memory Size
 
 --- lines below are ignored by the AG ---
 
