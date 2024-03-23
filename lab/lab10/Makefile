@@ -1,4 +1,4 @@
-CC=gcc
+CC=gcc-13
 CFLAGS= -std=gnu99 -c -fopenmp
 LDFLAGS=-fopenmp
 OBJECTS=$(SOURCES:.c=.o)
