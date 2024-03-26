@@ -1,8 +1,10 @@
 #include "matrix.h"
+#include <cstdio>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
+#include<math.h>
 
 // Include SSE intrinsics
 #if defined(_MSC_VER)
@@ -58,7 +60,48 @@ void rand_matrix(matrix *result, unsigned int seed, double low, double high) {
  * Return 0 upon success and non-zero upon failure.
  */
 int allocate_matrix(matrix **mat, int rows, int cols) {
-    /* TODO: YOUR CODE HERE */
+    if (rows < 1 || cols < 1) {
+        fprintf(stderr, "invalid input");
+        return -1;  // invalid input
+    }
+
+    *mat = (matrix*) malloc(sizeof(matrix));
+    if (*mat == NULL) {
+        fprintf(stderr, "allocation failed");
+        return -1;  // allocation failed
+    }
+
+    (*mat)->data = (double **) malloc(rows * sizeof(double *));
+    if ((*mat)->data == NULL) {
+        free(*mat);
+        fprintf(stderr, "allocation failed");
+        return -1;  // allocation failed
+    }
+
+    for (int i = 0; i < rows; i++) {
+        (*mat)->data[i] = (double *) calloc(cols, sizeof(double));
+        if ((*mat)->data[i] == NULL) {
+            for (int j = 0; j < i; j++) {
+                free((*mat)->data[j]);
+            }
+            free((*mat)->data);
+            free(*mat);
+            fprintf(stderr, "allocation failed");
+            return -1;
+        }
+    }
+
+    (*mat)->cols = cols;
+    (*mat)->rows = rows;
+    (*mat)->parent = NULL;
+    (*mat)->ref_cnt = 0;
+    if (rows == 1 | cols == 1) {
+        (*mat)->is_1d = 1;
+    } else {
+        (*mat)->is_1d = 0;
+    }
+
+    return 0;
 }
 
 /*
@@ -70,7 +113,41 @@ int allocate_matrix(matrix **mat, int rows, int cols) {
  */
 int allocate_matrix_ref(matrix **mat, matrix *from, int row_offset, int col_offset,
                         int rows, int cols) {
-    /* TODO: YOUR CODE HERE */
+    if (rows < 1 || cols < 1) {
+        fprintf(stderr, "invalid input");
+        return -1;  // invalid input
+    }
+
+    *mat = (matrix*) malloc(sizeof(matrix));
+    if (*mat == NULL) {
+        fprintf(stderr, "allocation failed");
+        return -1;  // allocation failed
+    }
+
+    (*mat)->data = (double **) malloc(rows * sizeof(double *));
+    if ((*mat)->data == NULL) {
+        free(*mat);
+        fprintf(stderr, "allocation failed");
+        return -1;  // allocation failed
+    }
+
+    for (int i = 0; i < rows; i++) {
+        (*mat)->data[i] = from->data[row_offset + i];    
+    }
+
+    (*mat)->cols = cols;
+    (*mat)->rows = rows;
+    (*mat)->parent = from;
+    (*mat)->ref_cnt = 0;
+    if (rows == 1 | cols == 1) {
+        (*mat)->is_1d = 1;
+    } else {
+        (*mat)->is_1d = 0;
+    }
+
+    from->ref_cnt++;
+
+    return 0;
 }
 
 /*
@@ -81,7 +158,15 @@ int allocate_matrix_ref(matrix **mat, matrix *from, int row_offset, int col_offs
  * See the spec for more information.
  */
 void deallocate_matrix(matrix *mat) {
-    /* TODO: YOUR CODE HERE */
+    if (mat->parent == NULL) {
+        for (int i = 0; i < mat->rows; i++) {
+            free(mat->data[i]);
+        }
+    } else {
+        mat->parent->ref_cnt--;
+    }
+    free(mat->data);
+    free(mat);
 }
 
 /*
@@ -89,7 +174,7 @@ void deallocate_matrix(matrix *mat) {
  * You may assume `row` and `col` are valid.
  */
 double get(matrix *mat, int row, int col) {
-    /* TODO: YOUR CODE HERE */
+    return mat->data[row][col];
 }
 
 /*
@@ -97,14 +182,18 @@ double get(matrix *mat, int row, int col) {
  * `col` are valid
  */
 void set(matrix *mat, int row, int col, double val) {
-    /* TODO: YOUR CODE HERE */
+    mat->data[row][col] = val;
 }
 
 /*
  * Set all entries in mat to val
  */
 void fill_matrix(matrix *mat, double val) {
-    /* TODO: YOUR CODE HERE */
+    for (int i = 0; i < mat->rows; i++) {
+        for (int j = 0; j < mat->cols; j++) {
+            mat->data[i][j] = val;
+        }
+    }
 }
 
 /*
@@ -112,7 +201,22 @@ void fill_matrix(matrix *mat, double val) {
  * Return 0 upon success and a nonzero value upon failure.
  */
 int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
-    /* TODO: YOUR CODE HERE */
+    if (result == NULL) {
+        int flag = allocate_matrix(&result, mat1->rows, mat1->cols);
+        if (flag != 0) {
+            return -1;
+        }
+    }
+    if (mat1->cols != mat2->cols || mat1->rows != mat2->rows) {
+        fprintf(stderr, "Can't add two matrics with different shape");
+        return -1;
+    }
+    for (int i = 0; i < mat1->rows; i++) {
+        for (int j = 0; j < mat1->cols; j++) {
+            result->data[i][j] = mat1->data[i][j] + mat2->data[i][j];
+        }
+    }
+    return 0;
 }
 
 /*
@@ -120,7 +224,22 @@ int add_matrix(matrix *result, matrix *mat1, matrix *mat2) {
  * Return 0 upon success and a nonzero value upon failure.
  */
 int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
-    /* TODO: YOUR CODE HERE */
+    if (result == NULL) {
+        int flag = allocate_matrix(&result, mat1->rows, mat1->cols);
+        if (flag != 0) {
+            return -1;
+        }
+    }
+    if (mat1->cols != mat2->cols || mat1->rows != mat2->rows) {
+        fprintf(stderr, "Can't sub matrics with different shape");
+        return -1;
+    }
+    for (int i = 0; i < mat1->rows; i++) {
+        for (int j = 0; j < mat1->cols; j++) {
+            result->data[i][j] = mat1->data[i][j] - mat2->data[i][j];
+        }
+    }
+    return 0;
 }
 
 /*
@@ -129,7 +248,24 @@ int sub_matrix(matrix *result, matrix *mat1, matrix *mat2) {
  * Remember that matrix multiplication is not the same as multiplying individual elements.
  */
 int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
-    /* TODO: YOUR CODE HERE */
+    if (result == NULL) {
+        int flag = allocate_matrix(&result, mat1->rows, mat2->cols);
+        if (flag != 0) {
+            return -1;
+        }
+    }
+    if (mat1->cols != mat2->rows) {
+        fprintf(stderr, "the number of mat1's cols should be equal to the number of mat2's rows");
+        return -1;
+    }
+    for (int i = 0; i < mat1->rows; i++) {
+        for (int j = 0; j < mat2->cols; j++) {
+            for (int k = 0;  k < mat1->cols; k++) {
+                result->data[i][j] += mat1->data[i][k] * mat2->data[k][j];
+            }
+        }
+    }
+    return 0;
 }
 
 /*
@@ -138,7 +274,42 @@ int mul_matrix(matrix *result, matrix *mat1, matrix *mat2) {
  * Remember that pow is defined with matrix multiplication, not element-wise multiplication.
  */
 int pow_matrix(matrix *result, matrix *mat, int pow) {
-    /* TODO: YOUR CODE HERE */
+    if (mat->cols != mat->rows) {
+        fprintf(stderr, "mat should be a n x n matrix");
+        return -1;
+    }
+    if (result == NULL) {
+        int flag_result = allocate_matrix(&result, mat->rows, mat->cols);
+        if (flag_result != 0) {
+            return -1;
+        }
+    }
+    matrix *tmp;
+    int flag_tmp = allocate_matrix(&tmp, mat->rows, mat->cols);
+    if (flag_tmp != 0) {
+        return -1;
+    }
+    for (int i = 0; i < mat->rows; i++) {
+        for (int j = 0; j < mat->cols; j++) {
+            result->data[i][j] = mat->data[i][j];
+        }
+    }
+    while (pow > 0) {
+        for (int i = 0; i < mat->rows; i++) {
+            for (int j = 0; j < mat->cols; j++) {
+                tmp->data[i][j] = result->data[i][j];
+            }
+        }
+        mul_matrix(result, tmp, mat);
+        pow--;
+    }
+    for (int i = 0; i < mat->rows; i++) {
+        free(tmp->data[i]);
+    }
+    free(tmp->data);
+    free(tmp);
+    return 0;
+    
 }
 
 /*
@@ -146,7 +317,16 @@ int pow_matrix(matrix *result, matrix *mat, int pow) {
  * Return 0 upon success and a nonzero value upon failure.
  */
 int neg_matrix(matrix *result, matrix *mat) {
-    /* TODO: YOUR CODE HERE */
+    int flag = allocate_matrix(&result, mat->rows, mat->cols);
+    if (flag != 0) {
+        return -1;
+    }
+    for (int i = 0; i < mat->rows; i++) {
+        for (int j = 0; j < mat->cols; j++) {
+            result->data[i][j] = - mat->data[i][j];
+        }
+    }
+    return 0;
 }
 
 /*
@@ -154,6 +334,14 @@ int neg_matrix(matrix *result, matrix *mat) {
  * Return 0 upon success and a nonzero value upon failure.
  */
 int abs_matrix(matrix *result, matrix *mat) {
-    /* TODO: YOUR CODE HERE */
+    int flag = allocate_matrix(&result, mat->rows, mat->cols);
+    if (flag != 0) {
+        return -1;
+    }
+    for (int i = 0; i < mat->rows; i++) {
+        for (int j = 0; j < mat->cols; j++) {
+            result->data[i][j] = fabs(mat->data[i][j]);
+        }
+    }
+    return 0;
 }
-
